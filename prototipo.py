@@ -10,21 +10,19 @@ import pickle # para teste
 #from matplotlib.backends.backend_pdf import PdfPages # para teste
 
 # Definindo diretorio com os exames a serem analisados
-data_dir = os.path.expanduser('~') + '/' + 'Dropbox' + '/' + 'UFRGS' + '/' + 'TCC' + '/' + 'Teste1' + '/'
+data_dir = os.path.expanduser('~') + '/' + 'Dropbox' + '/' + ‘TCC’ + '/' + ‘Teste1’ + '/'
 
-out_dir = os.path.expanduser('~') + '/' + 'Dropbox' + '/' + 'UFRGS' + '/' + 'TCC' + '/' + 'results' + '/'
+# Diretorio para guardar a estrutura com os dados de classificacao
+data_dir = os.path.expanduser('~') + '/' + 'Dropbox' + '/' + ‘TCC’ + '/' + ‘Teste1’ + '/' + ‘dados_classificados’ + '/'
 
 # Listando sujeitos a serem analisados
-subjects = ['SCHB038']
+subjects = ['SCHB009’]
 
 # Iniciando laco para repetir processamento para cada sujeito
 for subj in subjects:
 
     # Criando lista para guardar dados do sujeito
     dados = []
-
-    # Criando pdf com figuras
-#    pp = PdfPages('figuras_%s.pdf' % subj)
 
     # Definindo caminho para a imagem do sujeito
     img_file = data_dir + subj + '/' + subj + '.nii.gz'
@@ -34,6 +32,13 @@ for subj in subjects:
     img_data = img.get_data()
     # Extraindo informacoes das dimensoes da imagem
     sizeX, sizeY, numSlices, numDir = img_data.shape
+
+    # Definindo caminho para a fft da imagem do sujeito
+    fft_file = data_dir + subj + '/' + ‘fft’ + '.nii.gz'
+    # Carregando a imagem no ambiente Python
+    fft = nib.load(fft_file)
+    # Carregando os dados da imagem
+    fft_data = fft.get_data()
 
     # Criando arrays para as coordenadas da imagem em 1D
     x = []
@@ -48,100 +53,35 @@ for subj in subjects:
     for direc in xrange(numDir):       #range(numDir)
         # Trabalhando slice a slice na direcao
         for sl in xrange(numSlices):     #range(numSlices)
-            # Iniciando o timer para o slice
-#            start_slice = time.time()
             # Separando slice de interesse do volume
             slice = img_data[:,:,sl,direc]
-            # Normalizando intensidades do slice para soma ser 10000000
-            # slice = slice / (slice.sum()/10000000)
-            # Fazendo a fft do slice
-            slice_fft = fftpack.fft2(slice)
+            # Normalizando intensidades do slice para soma ser 1000000
+            slice = slice / (slice.sum()/1000000)
+            # Separando a fft do slice
+            slice_fft = fft_data[:,:,sl,direc]
             # Colocando as frequencias mais baixas no centro
-            slice_fft = fftpack.fftshift(slice_fft)
-            # Calculando o espectro de potencia
-            ps = np.abs(slice_fft)**2
-            # Normalizando o espectro para 100
-            ps = ps / (ps.sum()/100)
-            # Analisando o perfil radial do espectro
-#            rp = radialProfile.azimuthalAverage(ps)
-
-            # Transformando espectro em sequencia de pontos
-            ps_1D = np.ravel(ps)
-
-            # Definindo uma estimativa inicial para o ajuste
-            # Parametros [amp,x0,y0,a,b,c]
-            guess = [1,128,128,1,1,1]
-
-            try:
-                fit_params, uncert_cov = opt.curve_fit(gauss2d,xy,ps_1D,p0=guess)
-
-                # Calculando a gaussiana dada pelo ajuste
-                ps_fit = gauss2d(xy,*fit_params)
-                # Calculando o RMS do residuo do ajuste
-                resid = np.sqrt(np.mean((ps_1D - ps_fit)**2))
-
-
-                # Salvando os dados do ajuste
-                dados_temp = [subj,direc,sl,fit_params,uncert_cov,resid]
+  #          slice_fft = fftpack.fftshift(slice_fft)
+               
                 dados.append(dados_temp)
 
-                """
                 # Mostrando uma figura com as imagens de interesse
                 plt.clf()
                 fig = plt.figure()
                 fig.suptitle('Sujeito %s Direcao %d Slice %d' % (subj, direc, sl), fontsize=16)
-                ax1 = fig.add_subplot(131)
+                ax1 = fig.add_subplot(121)
                 ax1.imshow(slice,cmap='gray')
-                ax1.set_title('%f - %f'% (fit_params[0],fit_params[4]))
+                ax1.set_title(‘Espaco’)
                 ax1.axes.xaxis.set_visible(False)
                 ax1.axes.yaxis.set_visible(False)
-                ax2 = fig.add_subplot(132)
-                ax2.imshow(np.log10(ps))#,cmap='gray')
-                ax2.set_title('%f - %f'% (fit_params[3],fit_params[5]))
+
+                ax2 = fig.add_subplot(122)
+                ax2.imshow(fft,cmap='gray')
+                ax2.set_title(‘Frequencia’)
                 ax2.axes.xaxis.set_visible(False)
                 ax2.axes.yaxis.set_visible(False)
-                ax3 = fig.add_subplot(133)
-                ax3.semilogy(rp)
-                ax3.set_title('Perfil Radial')
-                ax3.set_xlabel('Frequencia Espacial')
-                ax3.set_ylabel('Magnitude')
-                #plt.show()
+
+                plt.show()
                 pp.savefig()
                 plt.close(fig)
-                """
-
-            except RuntimeError:
-                erros.append([subj,direc,sl])
-                print('Parametros otimos nao encontrados!!')
-                print('Seguindo adiante!')
-                # Salvando os dados do ajuste
-                dados_temp = [subj,direc,sl,'erro','erro','erro']
-                dados.append(dados_temp)
-
-                """
-                # Mostrando uma figura com as imagens de interesse
-                plt.clf()
-                fig = plt.figure()
-                fig.suptitle('Sujeito %s Direcao %d Slice %d' % (subj, direc, sl), fontsize=16)
-                ax1 = fig.add_subplot(131)
-                ax1.imshow(slice,cmap='gray')
-                ax1.set_title('erro')
-                ax1.axes.xaxis.set_visible(False)
-                ax1.axes.yaxis.set_visible(False)
-                ax2 = fig.add_subplot(132)
-                ax2.imshow(np.log10(ps))#,cmap='gray')
-                ax2.set_title('erro')
-                ax2.axes.xaxis.set_visible(False)
-                ax2.axes.yaxis.set_visible(False)
-                ax3 = fig.add_subplot(133)
-                ax3.semilogy(rp)
-                ax3.set_title('Perfil Radial')
-                ax3.set_xlabel('Frequencia Espacial')
-                ax3.set_ylabel('Magnitude')
-                #plt.show()
-                pp.savefig()
-                plt.close(fig)
-                """
 
     pickle.dump(dados,open(out_dir + "dados_%s.p" % subj,"wb"))
-#    pp.close()
