@@ -1,22 +1,22 @@
 """
-Protótipo do Visualizé
+Prototipo do VisualiZe
 """
 
 # Importando bibliotecas necessarias
 import os
 import nibabel as nib
-#from matplotlib import pyplot as plt # para teste
+from matplotlib import pyplot as plt # para teste
 import pickle # para teste
 #from matplotlib.backends.backend_pdf import PdfPages # para teste
 
 # Definindo diretorio com os exames a serem analisados
-data_dir = os.path.expanduser('~') + '/' + 'Dropbox' + '/' + ‘TCC’ + '/' + ‘Teste1’ + '/'
+data_dir = os.path.expanduser('~') + '/' + 'TCC' + '/' + 'Teste1' + '/'
 
 # Diretorio para guardar a estrutura com os dados de classificacao
-data_dir = os.path.expanduser('~') + '/' + 'Dropbox' + '/' + ‘TCC’ + '/' + ‘Teste1’ + '/' + ‘dados_classificados’ + '/'
+out_dir = os.path.expanduser('~') + '/' + 'TCC' + '/' + 'Teste1' + '/' + 'dados_classificados' + '/'
 
 # Listando sujeitos a serem analisados
-subjects = ['SCHB009’]
+subjects = ['SCHB009']
 
 # Iniciando laco para repetir processamento para cada sujeito
 for subj in subjects:
@@ -34,7 +34,7 @@ for subj in subjects:
     sizeX, sizeY, numSlices, numDir = img_data.shape
 
     # Definindo caminho para a fft da imagem do sujeito
-    fft_file = data_dir + subj + '/' + ‘fft’ + '.nii.gz'
+    fft_file = data_dir + subj + '/' + 'fft' + '.nii.gz'
     # Carregando a imagem no ambiente Python
     fft = nib.load(fft_file)
     # Carregando os dados da imagem
@@ -43,11 +43,13 @@ for subj in subjects:
     # Criando arrays para as coordenadas da imagem em 1D
     x = []
     y = []
+    """
     for i in xrange(sizeX):
         for j in xrange(sizeY):
             x = np.append(x,i)
             y = np.append(y,j)
     xy = np.array([x,y])
+    """
 
     # Iniciando laco para repetir processamento para cada direcao
     for direc in xrange(numDir):       #range(numDir)
@@ -58,30 +60,29 @@ for subj in subjects:
             # Normalizando intensidades do slice para soma ser 1000000
             slice = slice / (slice.sum()/1000000)
             # Separando a fft do slice
-            slice_fft = fft_data[:,:,sl,direc]
+            slice_fft = fft_data[:,:,sl,0,direc]
             # Colocando as frequencias mais baixas no centro
   #          slice_fft = fftpack.fftshift(slice_fft)
-               
-                dados.append(dados_temp)
 
                 # Mostrando uma figura com as imagens de interesse
-                plt.clf()
-                fig = plt.figure()
-                fig.suptitle('Sujeito %s Direcao %d Slice %d' % (subj, direc, sl), fontsize=16)
-                ax1 = fig.add_subplot(121)
-                ax1.imshow(slice,cmap='gray')
-                ax1.set_title(‘Espaco’)
-                ax1.axes.xaxis.set_visible(False)
-                ax1.axes.yaxis.set_visible(False)
+            plt.clf()
+            fig = plt.figure()
+            fig.suptitle('Sujeito %s Direcao %d Slice %d' % (subj, direc, sl), fontsize=16)
+            ax1 = fig.add_subplot(121)
+            ax1.imshow(slice,cmap='gray')
+            ax1.set_title('Espaco')
+            ax1.axes.xaxis.set_visible(False)
+            ax1.axes.yaxis.set_visible(False)
 
-                ax2 = fig.add_subplot(122)
-                ax2.imshow(fft,cmap='gray')
-                ax2.set_title(‘Frequencia’)
-                ax2.axes.xaxis.set_visible(False)
-                ax2.axes.yaxis.set_visible(False)
+            ax2 = fig.add_subplot(122)
+            ax2.imshow(slice_fft,cmap='gray')
+            ax2.set_title('Frequencia')
+            ax2.axes.xaxis.set_visible(False)
+            ax2.axes.yaxis.set_visible(False)
 
-                plt.show()
-                pp.savefig()
-                plt.close(fig)
+            plt.show()
+# Aqui deve vir o comando para esperar a tecla ser pressionada                #dados.append(dados_temp)
+
+            plt.close(fig)
 
     pickle.dump(dados,open(out_dir + "dados_%s.p" % subj,"wb"))
