@@ -7,13 +7,45 @@ import os
 import nibabel as nib
 from matplotlib import pyplot as plt # para teste
 import pickle # para teste
+from Tkinter import *
+
+#### botoes ####
+# class Application(Frame):
+#     def say_hi(self):
+#         print "hi there, everyone!"
+#
+#     def createWidgets(self):
+#         self.QUIT = Button(self)
+#         self.QUIT["text"] = "QUIT"
+#         self.QUIT["fg"]   = "red"
+#         self.QUIT["command"] =  self.quit
+#
+#         self.QUIT.pack({"side": "left"})
+#
+#         self.hi_there = Button(self)
+#         self.hi_there["text"] = "Hello",
+#         self.hi_there["command"] = self.say_hi
+#
+#         self.hi_there.pack({"side": "left"})
+#
+#     def __init__(self, master=None):
+#         Frame.__init__(self, master)
+#         self.pack()
+#         self.createWidgets()
+#
+# root = Tk()
+# app = Application(master=root)
+# app.mainloop()
+# root.destroy()
+
+################
 #from matplotlib.backends.backend_pdf import PdfPages # para teste
 
 # Definindo diretorio com os exames a serem analisados
-data_dir = os.path.expanduser('~') + '/' + 'TCC' + '/' + 'Teste1' + '/'
+data_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
 
 # Diretorio para guardar a estrutura com os dados de classificacao
-out_dir = os.path.expanduser('~') + '/' + 'TCC' + '/' + 'Teste1' + '/' + 'dados_classificados' + '/'
+out_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/' + 'Teste1' + '/'
 
 # Listando sujeitos a serem analisados
 subjects = ['SCHB009']
@@ -34,7 +66,7 @@ for subj in subjects:
     sizeX, sizeY, numSlices, numDir = img_data.shape
 
     # Definindo caminho para a fft da imagem do sujeito
-    fft_file = data_dir + subj + '/' + 'fft' + '.nii.gz'
+    fft_file = data_dir + subj + '/' + subj + '.nii.gz'
     # Carregando a imagem no ambiente Python
     fft = nib.load(fft_file)
     # Carregando os dados da imagem
@@ -51,6 +83,9 @@ for subj in subjects:
     xy = np.array([x,y])
     """
 
+    #Inicializa-se a janela antes do loop para não precisar recarregar todo o plot a cada iteração
+    fig = plt.figure()
+
     # Iniciando laco para repetir processamento para cada direcao
     for direc in xrange(numDir):       #range(numDir)
         # Trabalhando slice a slice na direcao
@@ -60,13 +95,11 @@ for subj in subjects:
             # Normalizando intensidades do slice para soma ser 1000000
             slice = slice / (slice.sum()/1000000)
             # Separando a fft do slice
-            slice_fft = fft_data[:,:,sl,0,direc]
+            slice_fft = fft_data[:,:,sl,direc]
             # Colocando as frequencias mais baixas no centro
-  #          slice_fft = fftpack.fftshift(slice_fft)
-
-                # Mostrando uma figura com as imagens de interesse
-            plt.clf()
-            fig = plt.figure()
+            # slice_fft = fftpack.fftshift(slice_fft)
+            # Mostrando uma figura com as imagens de interesse
+            fig.clear()
             fig.suptitle('Sujeito %s Direcao %d Slice %d' % (subj, direc, sl), fontsize=16)
             ax1 = fig.add_subplot(121)
             ax1.imshow(slice,cmap='gray')
@@ -80,9 +113,19 @@ for subj in subjects:
             ax2.axes.xaxis.set_visible(False)
             ax2.axes.yaxis.set_visible(False)
 
-            plt.show()
-# Aqui deve vir o comando para esperar a tecla ser pressionada                #dados.append(dados_temp)
+            #Isso libera o terminal para os comandos
+            plt.show(block=False)
+            #Isto redesenha a figura a cada iteração
+            fig.canvas.draw()
 
-            plt.close(fig)
+            string = raw_input("[1] Boa/ [Qualquer outra tecla] Ruim: ")
+            if (int(string) == 1):
+                print 'Imagem boa.'
+            else:
+                print 'Imagem ruim.'
 
-    pickle.dump(dados,open(out_dir + "dados_%s.p" % subj,"wb"))
+    # Aqui deve vir o comando para esperar a tecla ser pressionada         #dados.append(dados_temp)
+
+    plt.close(fig)
+
+pickle.dump(dados,open(out_dir + "dados_%s.p" % subj,"wb"))
