@@ -45,7 +45,7 @@ from Tkinter import *
 data_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
 
 # Diretorio para guardar a estrutura com os dados de classificacao
-out_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/' + 'Teste1' + '/'
+out_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/' +
 
 # Listando sujeitos a serem analisados
 subjects = ['SCHB009']
@@ -65,6 +65,9 @@ for subj in subjects:
     # Extraindo informacoes das dimensoes da imagem
     sizeX, sizeY, numSlices, numDir = img_data.shape
 
+    # Criando variavel para loop while
+    sl = 0
+
     # Definindo caminho para a fft da imagem do sujeito
     fft_file = data_dir + subj + '/' + subj + '.nii.gz'
     # Carregando a imagem no ambiente Python
@@ -83,13 +86,14 @@ for subj in subjects:
     xy = np.array([x,y])
     """
 
-    #Inicializa-se a janela antes do loop para não precisar recarregar todo o plot a cada iteração
+    # Inicializa-se a janela antes do loop para nao precisar recarregar todo o plot a cada iteracao
     fig = plt.figure()
 
     # Iniciando laco para repetir processamento para cada direcao
-    for direc in xrange(numDir):       #range(numDir)
+    for direc in [1]:#xrange(numDir):       #range(numDir)
         # Trabalhando slice a slice na direcao
-        for sl in xrange(numSlices):     #range(numSlices)
+        #for sl in xrange(20,30): #xrange(numSlices):
+        while (sl < numSlices):
             # Separando slice de interesse do volume
             slice = img_data[:,:,sl,direc]
             # Normalizando intensidades do slice para soma ser 1000000
@@ -115,16 +119,24 @@ for subj in subjects:
 
             #Isso libera o terminal para os comandos
             plt.show(block=False)
-            #Isto redesenha a figura a cada iteração
+            #Isto redesenha a figura a cada iteracao
             fig.canvas.draw()
 
-            string = raw_input("[1] Boa/ [Qualquer outra tecla] Ruim: ")
+            string = raw_input("[1] Boa/[2] Ruim ou [3] para retornar: ")
             if (int(string) == 1):
                 print 'Imagem boa.'
-            else:
+                dados.append(1)
+                sl = sl + 1
+            elif (int(string) == 2):
                 print 'Imagem ruim.'
-
-    # Aqui deve vir o comando para esperar a tecla ser pressionada         #dados.append(dados_temp)
+                dados.append(2)
+                sl = sl + 1
+            elif (int(string) == 3):
+                print 'Retornando a imagem anterior'
+                sl = sl - 1
+                del dados[-1]
+            else:
+                print 'Digite um comando valido.'
 
     plt.close(fig)
 
