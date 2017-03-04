@@ -5,41 +5,8 @@ Prototipo do VisualiZe
 # Importando bibliotecas necessarias
 import os
 import nibabel as nib
-from matplotlib import pyplot as plt # para teste
-import pickle # para teste
-from Tkinter import *
-
-#### botoes ####
-# class Application(Frame):
-#     def say_hi(self):
-#         print "hi there, everyone!"
-#
-#     def createWidgets(self):
-#         self.QUIT = Button(self)
-#         self.QUIT["text"] = "QUIT"
-#         self.QUIT["fg"]   = "red"
-#         self.QUIT["command"] =  self.quit
-#
-#         self.QUIT.pack({"side": "left"})
-#
-#         self.hi_there = Button(self)
-#         self.hi_there["text"] = "Hello",
-#         self.hi_there["command"] = self.say_hi
-#
-#         self.hi_there.pack({"side": "left"})
-#
-#     def __init__(self, master=None):
-#         Frame.__init__(self, master)
-#         self.pack()
-#         self.createWidgets()
-#
-# root = Tk()
-# app = Application(master=root)
-# app.mainloop()
-# root.destroy()
-
-################
-#from matplotlib.backends.backend_pdf import PdfPages # para teste
+from matplotlib import pyplot as plt
+import pickle
 
 # Definindo diretorio com os exames a serem analisados
 data_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
@@ -66,40 +33,29 @@ for subj in subjects:
     sizeX, sizeY, numSlices, numDir = img_data.shape
 
     # Criando variavel para loop while
+    direc = 0
     sl = 0
 
     # Definindo caminho para a fft da imagem do sujeito
-    fft_file = data_dir + subj + '/' + subj + '.nii.gz'
+    fft_file = data_dir + subj + '/' + 'fft' + '.nii.gz'
     # Carregando a imagem no ambiente Python
     fft = nib.load(fft_file)
     # Carregando os dados da imagem
     fft_data = fft.get_data()
 
-    # Criando arrays para as coordenadas da imagem em 1D
-    x = []
-    y = []
-    """
-    for i in xrange(sizeX):
-        for j in xrange(sizeY):
-            x = np.append(x,i)
-            y = np.append(y,j)
-    xy = np.array([x,y])
-    """
-
     # Inicializa-se a janela antes do loop para nao precisar recarregar todo o plot a cada iteracao
     fig = plt.figure()
 
     # Iniciando laco para repetir processamento para cada direcao
-    for direc in [1]:#xrange(numDir):       #range(numDir)
+    while (direc < numDir):
         # Trabalhando slice a slice na direcao
-        #for sl in xrange(20,30): #xrange(numSlices):
         while (sl < numSlices):
             # Separando slice de interesse do volume
             slice = img_data[:,:,sl,direc]
             # Normalizando intensidades do slice para soma ser 1000000
             slice = slice / (slice.sum()/1000000)
             # Separando a fft do slice
-            slice_fft = fft_data[:,:,sl,direc]
+            slice_fft = fft_data[:,:,sl,0,direc]
             # Colocando as frequencias mais baixas no centro
             # slice_fft = fftpack.fftshift(slice_fft)
             # Mostrando uma figura com as imagens de interesse
@@ -137,7 +93,7 @@ for subj in subjects:
                 del dados[-1]
             else:
                 print 'Digite um comando valido.'
-
+    # Fechando janela com as figuras
     plt.close(fig)
-
+# Salvando os dados em arquivo pickle
 pickle.dump(dados,open(out_dir + "dados_%s.p" % subj,"wb"))
