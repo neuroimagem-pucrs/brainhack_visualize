@@ -12,7 +12,7 @@ import pickle
 data_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
 
 # Diretorio para guardar a estrutura com os dados de classificacao
-out_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/' +
+out_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
 
 # Listando sujeitos a serem analisados
 subjects = ['SCHB009']
