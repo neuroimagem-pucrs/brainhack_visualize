@@ -7,6 +7,8 @@ import os
 import nibabel as nib
 from matplotlib import pyplot as plt
 import pickle
+from matplotlib.widgets import Button
+
 
 # Definindo diretorio com os exames a serem analisados
 data_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
@@ -16,6 +18,37 @@ out_dir = os.path.expanduser('~') + '/' + 'Downloads' + '/'
 
 # Listando sujeitos a serem analisados
 subjects = ['SCHB009']
+
+# Criando variavel para loop while
+#direc = 0
+#sl = 0
+
+####Classe botoes
+class Index(object):
+
+    def bom(self, event):
+        print 'Imagem boa.'
+        dados.append(1)
+        sl = sl + 1
+        raise Clique
+
+    def ruim(self, event):
+        print 'Imagem ruim.'
+        dados.append(2)
+        sl = sl + 1
+        raise Clique
+
+    def voltar(self, event):
+        print 'Retornando a imagem anterior'
+        sl = sl - 1
+        del dados[-1]
+        raise Clique
+#####
+
+# Excecao para ver clique do mouse
+class Clique(Exception):
+    pass
+
 
 # Iniciando laco para repetir processamento para cada sujeito
 for subj in subjects:
@@ -35,6 +68,9 @@ for subj in subjects:
     # Criando variavel para loop while
     direc = 0
     sl = 0
+
+    # Criando objeto para rotinas de botao
+    callback = Index()
 
     # Definindo caminho para a fft da imagem do sujeito
     fft_file = data_dir + subj + '/' + 'fft' + '.nii.gz'
@@ -73,26 +109,44 @@ for subj in subjects:
             ax2.axes.xaxis.set_visible(False)
             ax2.axes.yaxis.set_visible(False)
 
+
+            bom = plt.axes([0.5, 0.05, 0.1, 0.075])
+            ruim = plt.axes([0.61, 0.05, 0.1, 0.075])
+            voltar = plt.axes([0.81, 0.05, 0.1, 0.075])
+
+            botao_bom = Button(bom, 'Bom')
+            botao_bom.on_clicked(callback.bom)
+
+            botao_ruim = Button(ruim, 'Ruim')
+            botao_ruim.on_clicked(callback.ruim)
+
+            botao_voltar = Button(voltar, 'Voltar')
+            botao_voltar.on_clicked(callback.voltar)
+
             #Isso libera o terminal para os comandos
             plt.show(block=False)
             #Isto redesenha a figura a cada iteracao
             fig.canvas.draw()
-
-            string = raw_input("[1] Boa/[2] Ruim ou [3] para retornar: ")
-            if (int(string) == 1):
-                print 'Imagem boa.'
-                dados.append(1)
-                sl = sl + 1
-            elif (int(string) == 2):
-                print 'Imagem ruim.'
-                dados.append(2)
-                sl = sl + 1
-            elif (int(string) == 3):
-                print 'Retornando a imagem anterior'
-                sl = sl - 1
-                del dados[-1]
-            else:
-                print 'Digite um comando valido.'
+            try:
+                string = raw_input("[1] Boa/[2] Ruim ou [3] para retornar: ")
+                if (int(string) == 1):
+                    print 'Imagem boa.'
+                    dados.append(1)
+                    sl = sl + 1
+                elif (int(string) == 2):
+                    print 'Imagem ruim.'
+                    dados.append(2)
+                    sl = sl + 1
+                elif (int(string) == 3):
+                    print 'Retornando a imagem anterior'
+                    sl = sl - 1
+                    del dados[-1]
+                else:
+                    print 'Digite um comando valido.'
+            except(ValueError):
+                pass
+            except(Clique):
+                continue
     # Fechando janela com as figuras
     plt.close(fig)
 # Salvando os dados em arquivo pickle
