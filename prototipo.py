@@ -78,21 +78,26 @@ for subj in subjects:
             #Isto redesenha a figura a cada iteracao
             fig.canvas.draw()
 
-            string = raw_input("[1] Boa/[2] Ruim ou [3] para retornar: ")
-            if (int(string) == 1):
-                print 'Imagem boa.'
-                dados.append(1)
-                sl = sl + 1
-            elif (int(string) == 2):
-                print 'Imagem ruim.'
-                dados.append(2)
-                sl = sl + 1
-            elif (int(string) == 3):
-                print 'Retornando a imagem anterior'
-                sl = sl - 1
-                del dados[-1]
-            else:
-                print 'Digite um comando valido.'
+            try:
+                string = raw_input("[1] Boa/[2] Ruim ou [3] para retornar: ")
+
+                if (int(string) == 1):
+                    print 'Imagem boa.'
+                    dados.append(1)
+                    sl = sl + 1
+                elif (int(string) == 2):
+                    print 'Imagem ruim.'
+                    dados.append(2)
+                    sl = sl + 1
+                elif (int(string) == 3):
+                    print 'Retornando a imagem anterior'
+                    sl = sl - 1
+                    del dados[-1]
+                else:
+                    print 'Entre com um comando valido.'
+            except(ValueError):
+                print 'Insira um comando antes de apertar Enter'
+                pass
     # Fechando janela com as figuras
     plt.close(fig)
 # Salvando os dados em arquivo pickle
